@@ -5,7 +5,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from typing import List, Tuple, Optional
 from PIL import Image, ImageDraw, ImageFont
-from core.evaluator import Evaluator
+from utils.evaluator import Evaluator
 
 def parse_log_file(filepath: str) -> Tuple[List[int], List[float], List[float]]:
     """
