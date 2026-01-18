@@ -127,71 +127,79 @@ def show_eval_results(exp_name: str,
                       limit_batches: Optional[int] = None,
                       force_run: bool = False):
     """
-    Displays evaluation results and runs evaluation if data is missing.
-    Uses the Evaluator class directly.
+    Displays evaluation results. 
+    Triggers evaluation ONLY for missing checkpoints.
     """
     exp_dir = os.path.join("results", exp_name)
     results_file = os.path.join(exp_dir, "evaluation_results.txt")
     
-    # 1. Parse existing results
+    # 1. Check what we have on disk
     df_eval = parse_eval_results(results_file)
+    existing_steps = df_eval["Step"].values if not df_eval.empty else []
     
-    # 2. Check if we need to run evaluation
+    # 2. Check what is available to evaluate
     evaluator = Evaluator(exp_name)
     available_steps = evaluator.get_available_checkpoints()
     
-    should_run = False
+    if not available_steps:
+        print("No checkpoints found.")
+        return
+
+    # 3. Determine execution plan
+    should_launch_evaluator = False
     
     if force_run:
-        should_run = True
-    elif df_eval.empty:
-        should_run = True
+        should_launch_evaluator = True
     elif show_all:
-        # Check if all available checkpoints are in the dataframe
-        evaluated_steps = df_eval["Step"].values
-        if not all(step in evaluated_steps for step in available_steps):
-            should_run = True
-    elif ckpt_step:
-        if ckpt_step not in df_eval["Step"].values and ckpt_step in available_steps:
-            should_run = True
+        # If we want all, and any available step is missing from existing results, run.
+        if not all(step in existing_steps for step in available_steps):
+            should_launch_evaluator = True
+    elif ckpt_step is not None:
+        # Specific step requested
+        if ckpt_step not in existing_steps and ckpt_step in available_steps:
+            should_launch_evaluator = True
     else:
-        # Check latest
-        if available_steps and available_steps[-1] not in df_eval["Step"].values:
-            should_run = True
+        # Latest step requested (default)
+        latest_step = available_steps[-1]
+        if latest_step not in existing_steps:
+            should_launch_evaluator = True
             
-    # 3. Run Evaluation if needed
-    if should_run:
-        print(f"Running evaluation for {exp_name}...")
+    # 4. Run Evaluation (The Evaluator class handles skipping internally!)
+    if should_launch_evaluator:
+        print(f"Checking/Running evaluation for {exp_name}...")
         evaluator.run_evaluation(
             ckpt_step=ckpt_step,
             evaluate_all=show_all,
             batch_size=batch_size,
-            limit_batches=limit_batches
+            limit_batches=limit_batches,
+            force_rerun=force_run
         )
-        # Reload DataFrame
+        # Reload DataFrame after run
         df_eval = parse_eval_results(results_file)
 
-    # 4. Display Logic (Table & Plot)
+    # 5. Display Logic
     if not df_eval.empty:
         df_eval = df_eval.sort_values("Step")
         
         if not show_all:
             if ckpt_step is not None:
-                df_display = df_eval[df_eval["Step"] == ckpt_step]
+                # Show specific
+                display_df = df_eval[df_eval["Step"] == ckpt_step]
             else:
-                df_display = df_eval.iloc[[-1]]
+                # Show latest available result (might not be the absolute latest ckpt if that one failed)
+                display_df = df_eval.iloc[[-1]]
         else:
-            df_display = df_eval
+            display_df = df_eval
 
-        print("Evaluation Results:")
-        display(df_display)
+        print("Evaluation Results Table:")
+        display(display_df)
         
         if len(df_eval) > 1 and show_all:
-            plt.figure(figsize=(8, 5))
-            plt.plot(df_eval["Step"], df_eval["BPD"], marker='o', linestyle='-', color='green')
-            plt.xlabel("Checkpoint Step")
-            plt.ylabel("BPD")
-            plt.title("BPD vs Training Step")
+            plt.figure(figsize=(10, 5))
+            plt.plot(df_eval["Step"], df_eval["BPD"], marker='o', linestyle='-', color='green', linewidth=2)
+            plt.xlabel("Training Step")
+            plt.ylabel("BPD (Lower is Better)")
+            plt.title(f"BPD Curve: {exp_name}")
             plt.grid(True, alpha=0.3)
             plt.show()
     else:
