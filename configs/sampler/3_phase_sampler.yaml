@@ -1,0 +1,44 @@
+phase_0:
+  interval:
+  - 0.0
+  - 0.3415386787820741
+  t:
+    method: uniform
+    config: {}
+  r:
+    method: lognorm
+    config:
+      mu: -2.137395585126884
+      sigma: 2.842653368505097
+  instant_prob: 0.75
+  resample: false
+phase_1:
+  interval:
+  - 0.3415386787820741
+  - 0.6066097599937642
+  t:
+    method: uniform
+    config: {}
+  r:
+    method: lognorm
+    config:
+      mu: -0.8770720755648412
+      sigma: 1.5542784285100266
+  instant_prob: 0.75
+  resample: false
+phase_2:
+  interval:
+  - 0.6066097599937642
+  - 1.0
+  t:
+    method: lognorm
+    config:
+      mu: -0.4560392668293119
+      sigma: 1.8799044941284555
+  r:
+    method: lognorm
+    config:
+      mu: -2.916801807556316
+      sigma: 2.431355816592159
+  instant_prob: 0.75
+  resample: false

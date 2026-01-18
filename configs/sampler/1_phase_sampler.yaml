@@ -1,0 +1,14 @@
+phase_0:
+  interval:
+  - 0.0
+  - 1.0
+  t:
+    method: uniform
+    config: {}
+  r:
+    method: lognorm
+    config:
+      mu: -2.7106086
+      sigma: 1.3670615
+  instant_prob: 0.75
+  resample: true
