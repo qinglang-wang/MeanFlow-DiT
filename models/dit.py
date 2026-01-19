@@ -1,3 +1,5 @@
+# Credit to [haidog-yaqub/MeanFlow](https://github.com/haidog-yaqub/MeanFlow)
+
 import torch
 import torch.nn as nn
 import numpy as np
