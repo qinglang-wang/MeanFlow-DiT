@@ -8,7 +8,6 @@ import math
 import re
 from typing import Optional, List, Dict
 
-# Import your model
 from models.dit import MFDiT
 
 def div_fn(u: torch.Tensor, x: torch.Tensor) -> torch.Tensor:
@@ -17,6 +16,7 @@ def div_fn(u: torch.Tensor, x: torch.Tensor) -> torch.Tensor:
     vjp = torch.autograd.grad(u, x, grad_outputs=epsilon, create_graph=False)[0]
     div = (vjp * epsilon).sum(dim=[1, 2, 3])
     return div
+
 
 class Evaluator:
     def __init__(self, exp_name: str, device: str = 'cuda'):
